@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/60a3ed36-276e-43a4-8d6c-58883a76179b" alt="final" width="150" />
+</p>
+
 # LeanComplete
 
 LeanComplete is a minimal, performance-focused VS Code extension for inline ghost-text autocomplete. It acts as a universal, lightweight client for any OpenAI-compatible Fill-in-the-Middle (FIM) API, allowing you to connect to Mistral's Codestral, DeepSeek Coder, or local offline inference engines running via Ollama or LM Studio.
