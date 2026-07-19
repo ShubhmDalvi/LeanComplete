@@ -1,0 +1,154 @@
+{
+  "name": "leancomplete",
+  "displayName": "LeanComplete",
+  "description": "Minimal inline autocomplete. No chat panel, no telemetry, just ghost-text completions.",
+  "version": "0.11.0",
+  "publisher": "LeanComplete",
+  "icon": "images/icon.png",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": ["Programming Languages", "Machine Learning", "Other"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "leanComplete.configureProvider",
+        "title": "LeanComplete: Configure Provider..."
+      },
+      {
+        "command": "leanComplete.clearApiKey",
+        "title": "LeanComplete: Clear API Key"
+      },
+      {
+        "command": "leanComplete.toggle",
+        "title": "LeanComplete: Toggle On/Off"
+      },
+      {
+        "command": "leanComplete.showMenu",
+        "title": "LeanComplete: Show Menu"
+      },
+      {
+        "command": "leanComplete.cycleCompletionMode",
+        "title": "LeanComplete: Cycle Completion Mode (auto/single-line/multi-line)"
+      },
+      {
+        "command": "leanComplete.showUsageStats",
+        "title": "LeanComplete: Show Usage & Latency"
+      }
+    ],
+	"keybindings": [
+      {
+        "command": "leanComplete.triggerSuggest",
+        "key": "alt+\\",
+        "when": "editorTextFocus"
+      }
+    ],
+    "configuration": {
+      "title": "LeanComplete",
+      "properties": {
+        "leanComplete.endpoint": {
+          "type": "string",
+          "default": "https://codestral.mistral.ai/v1/fim/completions",
+          "description": "FIM completion endpoint. Use https://api.mistral.ai/v1/fim/completions if your key is a regular La Plateforme key rather than a dedicated Codestral key."
+        },
+        "leanComplete.model": {
+          "type": "string",
+          "default": "codestral-latest",
+          "description": "Codestral model id to use for FIM completions."
+        },
+        "leanComplete.completionMode": {
+          "type": "string",
+          "enum": ["auto", "single-line", "multi-line"],
+          "enumDescriptions": [
+            "Single-line whenever there's real content after the cursor on the current line; multi-line only when the rest of the line is blank.",
+            "Always stop at the first newline — fastest, lowest-risk suggestions.",
+            "Allow multi-line blocks whenever the rest of the line is blank (still forced to single-line if that's not the case, to avoid splitting existing code)."
+          ],
+          "default": "auto",
+          "description": "Controls whether completions can span multiple lines. 'auto' is recommended — it's also what makes suggestions faster on average, since single-line requests are cheaper to generate."
+        },
+        "leanComplete.singleLineMaxTokens": {
+          "type": "number",
+          "default": 48,
+          "description": "Token ceiling for single-line completions. Kept low for speed — the model also hard-stops at the first newline regardless of this cap."
+        },
+        "leanComplete.multiLineMaxTokens": {
+          "type": "number",
+          "default": 128,
+          "description": "Token ceiling for multi-line completions. (Previously called maxTokens; lowered from 256 by default to cut worst-case latency — raise it back if you want longer block completions.)"
+        },
+        "leanComplete.temperature": {
+          "type": "number",
+          "default": 0,
+          "description": "Sampling temperature. 0 = deterministic, most predictable completions."
+        },
+        "leanComplete.maxPrefixLines": {
+          "type": "number",
+          "default": 60,
+          "description": "How many lines before the cursor to send as context. Lowered from 100 — trims prompt size for faster responses; raise it if completions start missing relevant context."
+        },
+        "leanComplete.maxSuffixLines": {
+          "type": "number",
+          "default": 25,
+          "description": "How many lines after the cursor to send as context. Lowered from 40 for the same reason as maxPrefixLines."
+        },
+        "leanComplete.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Master on/off switch for suggestions."
+        },
+        "leanComplete.debounceMs": {
+          "type": "number",
+          "default": 300,
+          "description": "Default wait after you stop typing before requesting a completion. Overridden by triggerCharacterDebounceMs right after a trigger character. Skipped entirely on a cache hit."
+        },
+        "leanComplete.triggerCharacters": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [".", "(", "=", ":", ","],
+          "description": "Characters that, when just typed, use triggerCharacterDebounceMs instead of the normal debounceMs — these are moments you're usually pausing specifically to see a suggestion (member access, a call, an assignment...)."
+        },
+        "leanComplete.triggerCharacterDebounceMs": {
+          "type": "number",
+          "default": 60,
+          "description": "Debounce used right after typing a trigger character. Kept short but non-zero so rapid keystroke combos don't fire a flood of requests."
+        },
+        "leanComplete.requestTimeoutMs": {
+          "type": "number",
+          "default": 8000,
+          "description": "Hard timeout for a single request before it's aborted and (if retries remain) retried."
+        },
+        "leanComplete.maxRetries": {
+          "type": "number",
+          "default": 2,
+          "description": "Retry attempts for timeouts, network errors, or 5xx responses, with exponential backoff. 429s are handled separately via a cooldown, not retried."
+        },
+        "leanComplete.cooldownMs": {
+          "type": "number",
+          "default": 20000,
+          "description": "Fallback pause after a 429 (rate limit) response if the API doesn't send a Retry-After header."
+        },
+        "leanComplete.numSuggestions": {
+          "type": "number",
+          "default": 1,
+          "minimum": 1,
+          "maximum": 4,
+          "description": "How many alternative completions to fetch, cycle through with Alt+] / Alt+[. Each extra suggestion is a separate parallel API call, so raising this multiplies request volume and cost."
+        },
+        "leanComplete.disabledLanguages": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": ["plaintext", "markdown", "git-commit", "git-rebase", "scminput"],
+          "description": "Language ids where suggestions are always skipped."
+        },
+        "leanComplete.cacheEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Reuse the last completion(s) for an identical prefix/suffix/mode combo (e.g. after undo/redo, or retyping) instead of calling the API again."
+        }
+      }
+    }
+  }
+}
