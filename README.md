@@ -12,8 +12,6 @@ There is no chat panel, no agent mode, and no telemetry. The extension strictly 
 
 ## Build and Install
 
-Because compiled packages (`.vsix`) are not distributed in the repository releases, you must compile the extension locally from the source code.
-
 ### Prerequisites
 Make sure you have [Node.js](https://nodejs.org/) installed on your machine.
 
