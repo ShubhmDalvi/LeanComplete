@@ -18,7 +18,7 @@ Make sure you have [Node.js](https://nodejs.org/) installed on your machine.
 ### Steps
 1. Clone this repository and navigate into the directory:
    ```bash
-   git clone <your-repository-url>
+   git clone https://github.com/ShubhmDalvi/leancomplete
    cd leancomplete
    ```
 
